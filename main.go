@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,9 @@ func setup() error {
 	router.LoadHTMLGlob("html/*")
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
+	})
+	router.GET("/static/*filepath", func(c *gin.Context) {
+		c.File(filepath.Join("./static", c.Param("filepath")))
 	})
 
 	port := os.Getenv("PORT")
