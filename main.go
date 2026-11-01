@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -21,7 +22,11 @@ func handleError(c *gin.Context, err error) {
 	if err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
 	}
-	c.Data(http.StatusInternalServerError, "text/html; charset=utf-8", []byte("500"))
+	c.HTML(http.StatusInternalServerError, "base.html", gin.H{
+		"Title": "500",
+		"Description": "Внутренняя ошибка сервера",
+		"Content": "",
+	})
 }
 
 func mdToHTML(md string) template.HTML {
@@ -52,7 +57,15 @@ func setup() error {
 
 		data, err := os.ReadFile(path)
 		if err != nil {
-			handleError(c, err)
+			if errors.Is(err, os.ErrNotExist) {
+				c.HTML(http.StatusNotFound, "base.html", gin.H{
+					"Title": "404",
+					"Description": "Такой страницы не существует",
+					"Content": "",
+				})
+			} else {
+				handleError(c, err)
+			}
 			return
 		}
 
