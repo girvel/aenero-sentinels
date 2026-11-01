@@ -49,7 +49,7 @@ func setup() error {
 	})
 
 	md_with_description := regexp.MustCompile(`(?m)^# (.+)\n+(.+)\n+([\s\S]+)$`)
-	md_without_description := regexp.MustCompile(`(?m)^# (.+)\n+([\s\S]+)$`)
+	md_without_description := regexp.MustCompile(`(?m)^# (.+)\n+([\s\S]*)$`)
 	router.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 		if path == "/" {
