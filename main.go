@@ -47,6 +47,9 @@ func setup() error {
 	router.GET("/static/*filepath", func(c *gin.Context) {
 		c.File(filepath.Join("./static", c.Param("filepath")))
 	})
+
+	md_with_description := regexp.MustCompile(`(?m)^# (.+)\n+(.+)\n+([\s\S]+)$`)
+	md_without_description := regexp.MustCompile(`(?m)^# (.+)\n+([\s\S]+)$`)
 	router.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 		if path == "/" {
@@ -69,18 +72,33 @@ func setup() error {
 			return
 		}
 
-		pattern := regexp.MustCompile(`(?m)^# (.+)\n\n(.+)\n\n([\s\S]+)$`)
-		matches := pattern.FindStringSubmatch(string(data))
+		var args gin.H
+		md_string := string(data)
+		matches := md_with_description.FindStringSubmatch(md_string)
 		if len(matches) < 4 {
-			handleError(c, fmt.Errorf("%s does not match the markdown format", path))
-			return
+			matches := md_without_description.FindStringSubmatch(md_string)
+			if len(matches) < 3 {
+				args = gin.H{
+					"Title": "",
+					"Description": "",
+					"Content": mdToHTML(md_string),
+				}
+			} else {
+				args = gin.H{
+					"Title": matches[1],
+					"Description": "",
+					"Content": mdToHTML(matches[2]),
+				}
+			}
+		} else {
+			args = gin.H{
+				"Title": matches[1],
+				"Description": mdToHTML(matches[2]),
+				"Content": mdToHTML(matches[3]),
+			}
 		}
 
-		c.HTML(http.StatusOK, "base.html", gin.H{
-			"Title": matches[1],
-			"Description": mdToHTML(matches[2]),
-			"Content": mdToHTML(matches[3]),
-		})
+		c.HTML(http.StatusOK, "base.html", args)
 	})
 
 	port := os.Getenv("PORT")
