@@ -47,6 +47,9 @@ func setup() error {
 	router.GET("/static/*filepath", func(c *gin.Context) {
 		c.File(filepath.Join("./static", c.Param("filepath")))
 	})
+	router.GET("/favicon.png", func(c *gin.Context) {
+	    c.Redirect(http.StatusFound, "/static/favicon.png")
+	})
 
 	md_with_description := regexp.MustCompile(`(?m)^# (.+)\n+(.+)\n+([\s\S]+)$`)
 	md_without_description := regexp.MustCompile(`(?m)^# (.+)\n+([\s\S]*)$`)
